@@ -90,11 +90,23 @@ func (s *Sender) Send(ctx context.Context, in binding.Message, transformers ...b
 		}
 	}()
 
+	ctxHeader := context.WithValue(ctx, natsHeaderContextKey, natsHeader{})
 	writer := new(bytes.Buffer)
-	if err = WriteMsg(ctx, in, writer, transformers...); err != nil {
+	if err = WriteMsg(ctxHeader, in, writer, transformers...); err != nil {
 		return err
 	}
-	_, err = s.Jsm.Publish(s.Subject, writer.Bytes())
+
+	var header nats.Header
+	headerCtxValue := GetHeaderFromContext(ctxHeader)
+	header = nats.Header(headerCtxValue)
+
+	natsMsg := &nats.Msg{
+		Subject: s.Subject,
+		Data:    writer.Bytes(),
+		Header:  header,
+	}
+
+	_, err = s.Jsm.PublishMsg(natsMsg)
 
 	return err
 }
