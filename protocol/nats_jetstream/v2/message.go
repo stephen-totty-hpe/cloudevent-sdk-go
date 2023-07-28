@@ -109,8 +109,8 @@ func (m *Message) Finish(err error) error {
 func (m *Message) GetAttribute(attributeKind spec.Kind) (spec.Attribute, interface{}) {
 	key := withPrefix(attributeKind.String())
 	if m.Msg.Header != nil {
-		headerValue, ok := m.Msg.Header[key]
-		if ok {
+		headerValue := m.Msg.Header.Get(key)
+		if headerValue != _EMPTY_ {
 			version := m.GetVersion()
 			return version.Attribute(key), headerValue
 		}
@@ -122,8 +122,8 @@ func (m *Message) GetAttribute(attributeKind spec.Kind) (spec.Attribute, interfa
 func (m *Message) GetExtension(name string) interface{} {
 	key := withPrefix(name)
 	if m.Msg.Header != nil {
-		headerValue, ok := m.Msg.Header[key]
-		if ok {
+		headerValue := m.Msg.Header.Get(key)
+		if headerValue != _EMPTY_ {
 			return headerValue
 		}
 	}
@@ -135,11 +135,11 @@ func (m *Message) GetVersion() spec.Version {
 	if m.Msg.Header == nil {
 		return nil
 	}
-	versionValue := m.Msg.Header[specs.PrefixedSpecVersionName()]
-	if len(versionValue) == 0 {
+	versionValue := m.Msg.Header.Get(specs.PrefixedSpecVersionName())
+	if versionValue == _EMPTY_ {
 		return nil
 	}
-	return specs.Version(string(versionValue[0]))
+	return specs.Version(string(versionValue))
 }
 
 // withPrefix prepends the prefix to the attribute name
