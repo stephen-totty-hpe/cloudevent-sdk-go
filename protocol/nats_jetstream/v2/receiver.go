@@ -34,7 +34,13 @@ func NewReceiver() *Receiver {
 // MsgHandler implements nats.MsgHandler and publishes messages onto our internal incoming channel to be delivered
 // via r.Receive(ctx)
 func (r *Receiver) MsgHandler(msg *nats.Msg) {
-	r.incoming <- msgErr{msg: NewMessage(msg)}
+	r.incoming <- msgErr{
+		msg: binding.WithFinish(NewMessage(msg), func(err error) {
+			if protocol.IsACK(err) {
+				msg.Ack()
+			}
+		}),
+	}
 }
 
 // Receive implements Receiver.Receive.
