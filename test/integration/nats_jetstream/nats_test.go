@@ -42,7 +42,8 @@ func TestSendStructuredMessagedToStructures(t *testing.T) {
 			args: args{
 				bindingEncoding: binding.EncodingStructured,
 			},
-		}, {
+		},
+		{
 			name: "queue subscriber - structured",
 			args: args{
 				opts: []ce_nats.ProtocolOption{
@@ -52,23 +53,23 @@ func TestSendStructuredMessagedToStructures(t *testing.T) {
 				},
 				bindingEncoding: binding.EncodingStructured,
 			},
-		}, /*
-			{
-				name: "regular subscriber - binary",
-				args: args{
-					bindingEncoding: binding.EncodingBinary,
+		},
+		{
+			name: "regular subscriber - binary",
+			args: args{
+				bindingEncoding: binding.EncodingBinary,
+			},
+		}, {
+			name: "queue subscriber - binary",
+			args: args{
+				opts: []ce_nats.ProtocolOption{
+					ce_nats.WithConsumerOptions(
+						ce_nats.WithQueueSubscriber(uuid.New().String()),
+					),
 				},
-			}, {
-				name: "queue subscriber - binary",
-				args: args{
-					opts: []ce_nats.ProtocolOption{
-						ce_nats.WithConsumerOptions(
-							ce_nats.WithQueueSubscriber(uuid.New().String()),
-						),
-					},
-					bindingEncoding: binding.EncodingBinary,
-				},
-			}, */
+				bindingEncoding: binding.EncodingBinary,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -119,13 +120,14 @@ func testProtocol(t testing.TB, natsConn *nats.Conn, opts ...ce_nats.ProtocolOpt
 		s = "nats://localhost:4222"
 	}
 
-	subject := "test-ce-client-" + uuid.New().String()
+	stream := "test-ce-client-" + uuid.New().String()
+	subject := stream + ".test"
 
 	//	_, err := createStream(s, subject, ce_nats.NatsOptions(), []nats.JSOpt{})
 	//	require.NoError(t, err)
 
 	// use NewProtocol rather than individual Consumer and Sender since this gives us more coverage
-	p, err := ce_nats.NewProtocol(s, subject, subject, subject, ce_nats.NatsOptions(), []nats.JSOpt{}, []nats.SubOpt{}, opts...)
+	p, err := ce_nats.NewProtocol(s, stream, subject, subject, ce_nats.NatsOptions(), []nats.JSOpt{}, []nats.SubOpt{}, opts...)
 	require.NoError(t, err)
 
 	go func() {
