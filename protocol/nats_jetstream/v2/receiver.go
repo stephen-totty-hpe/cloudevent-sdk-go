@@ -172,6 +172,7 @@ func (c *Consumer) applyOptions(opts ...ConsumerOption) error {
 // subscriptionLoop pull based loop
 // TODO: SCT: pull consumer
 func (c *Consumer) subscriptionLoop(ctx context.Context, natsSub *nats.Subscription) {
+	maxWait := nats.MaxWait(time.Second)
 	for {
 		// Wait until external or internal context done
 		select {
@@ -180,9 +181,9 @@ func (c *Consumer) subscriptionLoop(ctx context.Context, natsSub *nats.Subscript
 		case <-c.internalClose:
 			return
 		default:
-			msg, _ := natsSub.NextMsg(time.Second)
-			if msg != nil {
-				c.Receiver.MsgHandler(msg)
+			msgs, _ := natsSub.Fetch(1, maxWait)
+			if len(msgs) == 1 {
+				c.Receiver.MsgHandler(msgs[0])
 			}
 		}
 	}
