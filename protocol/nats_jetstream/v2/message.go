@@ -115,6 +115,11 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 
 // Finish *must* be called when message from a Receiver can be forgotten by the receiver.
 func (m *Message) Finish(err error) error {
+	// TODO: SCT: pull processing
+	// js.go - subscribe() // Auto acknowledge unless manual ack is set or policy is set to AckNonePolicy
+	if DoPullProcessing {
+		return m.Msg.Ack()
+	}
 	return nil
 }
 

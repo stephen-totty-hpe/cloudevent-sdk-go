@@ -129,7 +129,7 @@ func (c *Consumer) OpenInbound(ctx context.Context) error {
 	}
 
 	// TODO: SCT: pull subscription
-	if doPullProcessing {
+	if DoPullProcessing {
 		c.subscriptionLoop(ctx, sub)
 	} else {
 		// Wait until external or internal context done
