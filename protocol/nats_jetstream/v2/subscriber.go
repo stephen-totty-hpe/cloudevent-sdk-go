@@ -9,6 +9,11 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
+const (
+	// TODO: SCT: look for this variable usage to see pull processing
+	doPullProcessing = true
+)
+
 // The Subscriber interface allows us to configure how the subscription is created
 type Subscriber interface {
 	Subscribe(jsm nats.JetStreamContext, subject string, cb nats.MsgHandler, opts ...nats.SubOpt) (*nats.Subscription, error)
@@ -20,6 +25,9 @@ type RegularSubscriber struct {
 
 // Subscribe implements Subscriber.Subscribe
 func (s *RegularSubscriber) Subscribe(jsm nats.JetStreamContext, subject string, cb nats.MsgHandler, opts ...nats.SubOpt) (*nats.Subscription, error) {
+	if doPullProcessing {
+		return jsm.SubscribeSync(subject, opts...)
+	}
 	return jsm.Subscribe(subject, cb, opts...)
 }
 
@@ -32,6 +40,9 @@ type QueueSubscriber struct {
 
 // Subscribe implements Subscriber.Subscribe
 func (s *QueueSubscriber) Subscribe(jsm nats.JetStreamContext, subject string, cb nats.MsgHandler, opts ...nats.SubOpt) (*nats.Subscription, error) {
+	if doPullProcessing {
+		return jsm.QueueSubscribeSync(subject, s.Queue, opts...)
+	}
 	return jsm.QueueSubscribe(subject, s.Queue, cb, opts...)
 }
 

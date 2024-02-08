@@ -22,6 +22,10 @@ const (
 	// see https://github.com/cloudevents/spec/blob/main/cloudevents/bindings/nats-protocol-binding.md
 	prefix            = "ce-"
 	contentTypeHeader = "content-type"
+
+	// TODO: SCT: added headers
+	natsReplyHeader   = "natsreply"
+	natsSubjectHeader = "natssubject"
 )
 
 var specs = spec.WithPrefix(prefix)
@@ -88,6 +92,18 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		if err != nil {
 			return err
 		}
+	}
+
+	// TODO: SCT: added this two SetExtension calls
+	// populate NATS reply as a cloudEvent header
+	err = encoder.SetExtension(natsReplyHeader, m.Msg.Reply)
+	if err != nil {
+		return err
+	}
+	// populate NATS subject as a cloudEvent header
+	err = encoder.SetExtension(natsSubjectHeader, m.Msg.Subject)
+	if err != nil {
+		return err
 	}
 
 	if m.Msg.Data != nil {

@@ -101,7 +101,7 @@ func testConn(t testing.TB) *nats.Conn {
 	// STAN connections actually connect to NATS, so the env var is named appropriately
 	s := os.Getenv("TEST_NATS_SERVER")
 	if s == "" {
-		s = "nats://localhost:4223"
+		s = "nats://localhost:4222"
 	}
 
 	conn, err := nats.Connect(s)
@@ -117,7 +117,7 @@ func testProtocol(t testing.TB, natsConn *nats.Conn, opts ...ce_nats.ProtocolOpt
 	// STAN connections actually connect to NATS, so the env var is named appropriately
 	s := os.Getenv("TEST_NATS_SERVER")
 	if s == "" {
-		s = "nats://localhost:4223"
+		s = "nats://localhost:4222"
 	}
 
 	stream := "test-ce-client-" + uuid.New().String()

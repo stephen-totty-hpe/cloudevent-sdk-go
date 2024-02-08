@@ -50,17 +50,20 @@ func NewSenderFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats.J
 		return nil, err
 	}
 
-	streamInfo, err := jsm.StreamInfo(stream, jsmOpts...)
+	/*
+		TODO: SCT - removed this code.
+		streamInfo, err := jsm.StreamInfo(stream, jsmOpts...)
 
-	if streamInfo == nil || err != nil && err.Error() == "stream not found" {
-		_, err = jsm.AddStream(&nats.StreamConfig{
-			Name:     stream,
-			Subjects: []string{stream + ".*"},
-		})
-		if err != nil {
-			return nil, err
+		if streamInfo == nil || err != nil && err.Error() == "stream not found" {
+			_, err = jsm.AddStream(&nats.StreamConfig{
+				Name:     stream,
+				Subjects: []string{stream + ".*"},
+			})
+			if err != nil {
+				return nil, err
+			}
 		}
-	}
+	*/
 
 	s := &Sender{
 		Jsm:     jsm,
