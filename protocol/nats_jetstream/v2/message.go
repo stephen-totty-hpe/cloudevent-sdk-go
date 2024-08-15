@@ -22,6 +22,10 @@ const (
 	// see https://github.com/cloudevents/spec/blob/main/cloudevents/bindings/nats-protocol-binding.md
 	prefix            = "ce-"
 	contentTypeHeader = "content-type"
+
+	// TODO: SCT: added headers
+	natsReplyHeader   = "natsreply"
+	natsSubjectHeader = "natssubject"
 )
 
 var specs = spec.WithPrefix(prefix)
@@ -90,6 +94,18 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 		}
 	}
 
+	// TODO: SCT: added this two SetExtension calls
+	// populate NATS reply as a cloudEvent header
+	err = encoder.SetExtension(natsReplyHeader, m.Msg.Reply)
+	if err != nil {
+		return err
+	}
+	// populate NATS subject as a cloudEvent header
+	err = encoder.SetExtension(natsSubjectHeader, m.Msg.Subject)
+	if err != nil {
+		return err
+	}
+
 	if m.Msg.Data != nil {
 		err = encoder.SetData(bytes.NewBuffer(m.Msg.Data))
 	}
@@ -99,7 +115,12 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 
 // Finish *must* be called when message from a Receiver can be forgotten by the receiver.
 func (m *Message) Finish(err error) error {
-	return nil
+	// TODO: SCT: pull processing
+	// js.go - subscribe() // Auto acknowledge unless manual ack is set or policy is set to AckNonePolicy
+	if err != nil {
+		return m.Msg.Nak()
+	}
+	return m.Msg.Ack()
 }
 
 // GetAttribute implements binding.MessageMetadataReader

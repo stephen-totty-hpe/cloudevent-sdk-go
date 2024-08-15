@@ -12,6 +12,7 @@ import (
 )
 
 var ErrInvalidQueueName = errors.New("invalid queue name for QueueSubscriber")
+var ErrInvalidDurableName = errors.New("invalid durable name for PullSubscriber")
 
 // NatsOptions is a helper function to group a variadic nats.ProtocolOption into
 // []nats.Option that can be used by either Sender, Consumer or Protocol
@@ -47,6 +48,17 @@ func WithQueueSubscriber(queue string) ConsumerOption {
 			return ErrInvalidQueueName
 		}
 		c.Subscriber = &QueueSubscriber{Queue: queue}
+		return nil
+	}
+}
+
+// WithPullSubscriber configures the Consumer to pull messages when subscribing
+func WithPullSubscriber(durable string) ConsumerOption {
+	return func(c *Consumer) error {
+		if durable == "" {
+			return ErrInvalidDurableName
+		}
+		c.Subscriber = &PullSubscriber{Durable: durable}
 		return nil
 	}
 }

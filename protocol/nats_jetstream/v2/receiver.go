@@ -10,6 +10,7 @@ import (
 	"io"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/nats-io/nats.go"
 
@@ -139,10 +140,16 @@ func (c *Consumer) OpenInbound(ctx context.Context) error {
 		return err
 	}
 
-	// Wait until external or internal context done
-	select {
-	case <-ctx.Done():
-	case <-c.internalClose:
+	// TODO: SCT: pull subscription
+	_, isPullSubscriber := c.Subscriber.(*PullSubscriber)
+	if isPullSubscriber {
+		c.subscriptionLoop(ctx, sub)
+	} else {
+		// Wait until external or internal context done
+		select {
+		case <-ctx.Done():
+		case <-c.internalClose:
+		}
 	}
 
 	// Finish to consume messages in the queue and close the subscription
@@ -173,6 +180,26 @@ func (c *Consumer) applyOptions(opts ...ConsumerOption) error {
 		}
 	}
 	return nil
+}
+
+// subscriptionLoop pull based loop
+// TODO: SCT: pull consumer
+func (c *Consumer) subscriptionLoop(ctx context.Context, natsSub *nats.Subscription) {
+	maxWait := nats.MaxWait(time.Second)
+	for {
+		// Wait until external or internal context done
+		select {
+		case <-ctx.Done():
+			return
+		case <-c.internalClose:
+			return
+		default:
+			msgs, _ := natsSub.Fetch(1, maxWait)
+			if len(msgs) == 1 {
+				c.Receiver.MsgHandler(msgs[0])
+			}
+		}
+	}
 }
 
 var _ protocol.Opener = (*Consumer)(nil)

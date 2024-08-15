@@ -50,6 +50,7 @@ func NewSenderFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats.J
 		return nil, err
 	}
 
+	/* TODO: SCT - removed this code.
 	streamInfo, err := jsm.StreamInfo(stream, jsmOpts...)
 
 	if streamInfo == nil || err != nil && err.Error() == "stream not found" {
@@ -61,6 +62,7 @@ func NewSenderFromConn(conn *nats.Conn, stream, subject string, jsmOpts []nats.J
 			return nil, err
 		}
 	}
+	*/
 
 	s := &Sender{
 		Jsm:     jsm,

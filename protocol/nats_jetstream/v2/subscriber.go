@@ -36,3 +36,15 @@ func (s *QueueSubscriber) Subscribe(jsm nats.JetStreamContext, subject string, c
 }
 
 var _ Subscriber = (*QueueSubscriber)(nil)
+
+// PullSubscriber creates pull subscriptions
+type PullSubscriber struct {
+	Durable string
+}
+
+// Subscribe implements Subscriber.Subscribe
+func (s *PullSubscriber) Subscribe(jsm nats.JetStreamContext, subject string, cb nats.MsgHandler, opts ...nats.SubOpt) (*nats.Subscription, error) {
+	return jsm.PullSubscribe(subject, s.Durable, opts...)
+}
+
+var _ Subscriber = (*PullSubscriber)(nil)
