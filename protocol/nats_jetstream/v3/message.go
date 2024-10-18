@@ -17,6 +17,7 @@ import (
 	"github.com/cloudevents/sdk-go/v2/binding"
 	"github.com/cloudevents/sdk-go/v2/binding/format"
 	"github.com/cloudevents/sdk-go/v2/binding/spec"
+	"github.com/cloudevents/sdk-go/v2/protocol"
 )
 
 const (
@@ -105,6 +106,29 @@ func (m *Message) ReadBinary(ctx context.Context, encoder binding.BinaryWriter) 
 
 // Finish *must* be called when message from a Receiver can be forgotten by the receiver.
 func (m *Message) Finish(err error) error {
+	// Ack and Nak first checks to see if the message has been acknowleged
+	// and if Ack/Nak was done, it immediately returns an error without applying any logic to the message on the server.
+	// Nak will only be sent if the error given is explictly a NACK error(protocol.ResultNACK).
+	// AckPolicy effects if an explict Ack/Nak is needed.
+	// AckExplicit: The default policy. Each individual message must be acknowledged.
+	// 		Recommended for most reliability and functionality.
+	// AckNone: No acknowledgment needed; the server assumes acknowledgment on delivery.
+	// AckAll: Acknowledge only the last message received in a series; all previous messages are automatically acknowledged.
+	// 		Will acknowledge all pending messages for all subscribers for Pull Consumer.
+	// see: github.com/nats-io/nats.go/jetstream/ConsumerConfig.AckPolicy
+	if m.Msg == nil {
+		return nil
+	}
+	if protocol.IsNACK(err) {
+		if err = m.Msg.Nak(); err != jetstream.ErrMsgAlreadyAckd {
+			return err
+		}
+	}
+	if protocol.IsACK(err) {
+		if err = m.Msg.Ack(); err != jetstream.ErrMsgAlreadyAckd {
+			return err
+		}
+	}
 	return nil
 }
 
